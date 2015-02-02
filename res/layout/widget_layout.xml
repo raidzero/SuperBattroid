@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scaleType="fitCenter"
+    android:adjustViewBounds="true">
+
+    <ImageView
+        android:id="@+id/tank_display"
+        android:src="@drawable/full_tanks_0"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+
+    <ImageView
+        android:id="@+id/energy_label"
+        android:src="@drawable/energy"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tank_display"
+        />
+
+    <ImageView
+        android:id="@+id/energy_display_ones"
+        android:src="@drawable/energy_0"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tank_display"
+        android:layout_alignRight="@+id/tank_display"
+        android:layout_alignEnd="@+id/tank_display" />
+
+    <ImageView
+        android:id="@+id/energy_display_tens"
+        android:src="@drawable/energy_0"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tank_display"
+        android:layout_toLeftOf="@+id/energy_display_ones"
+        android:layout_toStartOf="@+id/energy_display_ones" />
+</RelativeLayout>

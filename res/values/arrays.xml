@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- energy tank icons -->
+    <string-array name="energy_tanks">
+        <item>@drawable/full_tanks_0</item>
+        <item>@drawable/full_tanks_1</item>
+        <item>@drawable/full_tanks_2</item>
+        <item>@drawable/full_tanks_3</item>
+        <item>@drawable/full_tanks_4</item>
+        <item>@drawable/full_tanks_5</item>
+        <item>@drawable/full_tanks_6</item>
+        <item>@drawable/full_tanks_7</item>
+        <item>@drawable/full_tanks_8</item>
+        <item>@drawable/full_tanks_9</item>
+        <item>@drawable/full_tanks_10</item>
+        <item>@drawable/full_tanks_11</item>
+        <item>@drawable/full_tanks_12</item>
+        <item>@drawable/full_tanks_13</item>
+        <item>@drawable/full_tanks_14</item>
+    </string-array>
+
+    <!-- energy font images -->
+    <string-array name="energy_font">
+        <item>@drawable/energy_0</item>
+        <item>@drawable/energy_1</item>
+        <item>@drawable/energy_2</item>
+        <item>@drawable/energy_3</item>
+        <item>@drawable/energy_4</item>
+        <item>@drawable/energy_5</item>
+        <item>@drawable/energy_6</item>
+        <item>@drawable/energy_7</item>
+        <item>@drawable/energy_8</item>
+        <item>@drawable/energy_9</item>
+    </string-array>
+
+</resources>
