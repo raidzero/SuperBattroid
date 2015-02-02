@@ -9,6 +9,10 @@
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.appwidget.action.APPWIDGET_ENABLED" />
+                <action android:name="android.appwidget.action.APPWIDGET_DELETED" />
+                <action android:name="android.appwidget.action.APPWIDGET_DISABLED" />
+
                 <action android:name="com.raidzero.superbattroid.UPDATE" />
             </intent-filter>
             <meta-data
@@ -16,6 +20,7 @@
                 android:resource="@xml/widget_info" />
         </receiver>
 
+        <service android:name="com.raidzero.superbattroid.BatteryService"/>
     </application>
 
 </manifest>

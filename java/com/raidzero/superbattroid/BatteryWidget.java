@@ -1,6 +1,5 @@
 package com.raidzero.superbattroid;
 
-import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -9,13 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.TypedArray;
-import android.graphics.drawable.Drawable;
 import android.os.BatteryManager;
-import android.os.SystemClock;
 import android.util.Log;
 import android.widget.RemoteViews;
-
-import java.text.DecimalFormat;
 
 /**
  * Created by raidzero on 1/31/15.
@@ -23,48 +18,52 @@ import java.text.DecimalFormat;
 public class BatteryWidget extends AppWidgetProvider {
     private static final String tag = "BatteryWidget";
     private static final String ACTION_BATTERY_UPDATE = "com.raidzero.superbattroid.UPDATE";
-    private double batteryLevel = 0;
-
-    private static final int NUM_TANKS = 14;
+    private int energyLevel;
 
     private Intent battStatsIntent = new Intent(Intent.ACTION_POWER_USAGE_SUMMARY);
-    private PendingIntent pendingBattIntent;
 
-    private AppWidgetManager widgetManager;
-    private int[] appWidgetIds;
+    @Override
+    public void onEnabled(Context context) {
+        LogUtility.Log(tag, "onEnabled()");
+
+        context.startService(new Intent(context, BatteryService.class));
+        super.onEnabled(context);
+    }
+
+    @Override
+    public void onDisabled(Context context) {
+        LogUtility.Log(tag, "onDisabled()");
+
+        if (BatteryService.isRunning) {
+            context.stopService(new Intent(context, BatteryService.class));
+        }
+        super.onDisabled(context);
+    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        super.onUpdate(context, appWidgetManager, appWidgetIds);
+        LogUtility.Log(tag, "onUpdate()");
 
-        this.widgetManager = appWidgetManager;
-        this.appWidgetIds = appWidgetIds;
-
-        pendingBattIntent = PendingIntent.getActivity(context, 0, battStatsIntent, 0);
-
-        double currentLevel = calculateBatteryLevel(context);
-        if (batteryChanged(currentLevel)) {
-            batteryLevel = currentLevel;
+        if (!BatteryService.isRunning) {
+            context.startService(new Intent(context, BatteryService.class));
         }
+        energyLevel = BatteryService.getEnergyLevel(context);
 
         updateViews(context);
-    }
-
-    private boolean batteryChanged(double currentLevelLeft) {
-        return (batteryLevel != currentLevelLeft);
+        super.onUpdate(context, appWidgetManager, appWidgetIds);
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
 
-        if (intent.getAction().equals(ACTION_BATTERY_UPDATE)) {
-            double currentLevel = calculateBatteryLevel(context);
+        LogUtility.Log(tag, "onReceive: " + intent.getAction());
 
-            if (batteryChanged(currentLevel)) {
-                batteryLevel = currentLevel;
-                updateViews(context);
-            }
+        // update widget
+        if (intent.getAction().equals(ACTION_BATTERY_UPDATE)) {
+            energyLevel = intent.getIntExtra("batteryLevel", 0);
+            LogUtility.Log(tag, "Got energy level: " + energyLevel);
+            updateViews(context);
         }
     }
 
@@ -73,9 +72,15 @@ public class BatteryWidget extends AppWidgetProvider {
         int fullTanks = 0;
         TypedArray tankImages = context.getResources().obtainTypedArray(R.array.energy_tanks);
 
+        LogUtility.Log(tag, "getTankDrawable(" + energyLevel + ")");
+
         fullTanks = energyLevel / 100;
 
-        Log.d(tag, "fullTanks: " + fullTanks);
+        if (fullTanks > 14) {
+            fullTanks = 14;
+        }
+
+        LogUtility.Log(tag, "fullTanks: " + fullTanks);
         return tankImages.getResourceId(fullTanks, -1);
     }
 
@@ -86,7 +91,11 @@ public class BatteryWidget extends AppWidgetProvider {
             level = 99;
         }
 
-        Log.d(tag, "energyDisplayed: " + level);
+        if (energyLevel == 0) {
+            level = 0;
+        }
+
+        LogUtility.Log(tag, "energyDisplayed: " + level);
 
         TypedArray fontImages = context.getResources().obtainTypedArray(R.array.energy_font);
 
@@ -96,36 +105,24 @@ public class BatteryWidget extends AppWidgetProvider {
         return images;
     }
 
-    private int calculateBatteryLevel(Context context) {
-
-        Intent batteryIntent = context.getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-
-        int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
-        int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
-        int energyLevel = (level * 100 / scale) * NUM_TANKS;
-
-        Log.d(tag, "percentage: " + energyLevel);
-        return energyLevel;
-    }
-
     private void updateViews(Context context) {
-        int numWidgets = 0;
-        if (appWidgetIds != null) {
-            numWidgets = appWidgetIds.length;
-            for (int i = 0; i < numWidgets; i++) {
-                RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
-                views.setOnClickPendingIntent(R.id.widget_container, pendingBattIntent);
+        LogUtility.Log(tag, "updateViews");
 
-                int energyLevel = calculateBatteryLevel(context);
-                int displayedTanksId = getTankDrawable(context, energyLevel);
-                int[] displayedEnergy = getEnergyDisplay(context, energyLevel);
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
+        PendingIntent pendingBattIntent = PendingIntent.getActivity(context, 0, battStatsIntent, 0);
 
-                views.setImageViewResource(R.id.tank_display, displayedTanksId);
-                views.setImageViewResource(R.id.energy_display_tens, displayedEnergy[0]);
-                views.setImageViewResource(R.id.energy_display_ones, displayedEnergy[1]);
+        views.setOnClickPendingIntent(R.id.widget_container, pendingBattIntent);
 
-                widgetManager.updateAppWidget(appWidgetIds[i], views);
-            }
-        }
+        int displayedTanksId = getTankDrawable(context, energyLevel);
+        int[] displayedEnergy = getEnergyDisplay(context, energyLevel);
+
+        views.setImageViewResource(R.id.tank_display, displayedTanksId);
+        views.setImageViewResource(R.id.energy_display_tens, displayedEnergy[0]);
+        views.setImageViewResource(R.id.energy_display_ones, displayedEnergy[1]);
+
+        ComponentName componentName = new ComponentName(context, BatteryWidget.class);
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        appWidgetManager.updateAppWidget(componentName, views);
+
     }
 }
