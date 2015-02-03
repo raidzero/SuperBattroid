@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.res.TypedArray;
 import android.os.BatteryManager;
 import android.util.Log;
+import android.view.View;
 import android.widget.RemoteViews;
 
 /**
@@ -20,6 +21,7 @@ public class BatteryWidget extends AppWidgetProvider {
     private static final String ACTION_BATTERY_UPDATE = "com.raidzero.superbattroid.UPDATE";
     private int energyLevel;
 
+    private boolean mCharging = false;
     private Intent battStatsIntent = new Intent(Intent.ACTION_POWER_USAGE_SUMMARY);
 
     @Override
@@ -62,6 +64,8 @@ public class BatteryWidget extends AppWidgetProvider {
         // update widget
         if (intent.getAction().equals(ACTION_BATTERY_UPDATE)) {
             energyLevel = intent.getIntExtra("batteryLevel", 0);
+            mCharging = intent.getBooleanExtra("charging", false);
+
             LogUtility.Log(tag, "Got energy level: " + energyLevel);
             updateViews(context);
         }
@@ -119,6 +123,12 @@ public class BatteryWidget extends AppWidgetProvider {
         views.setImageViewResource(R.id.tank_display, displayedTanksId);
         views.setImageViewResource(R.id.energy_display_tens, displayedEnergy[0]);
         views.setImageViewResource(R.id.energy_display_ones, displayedEnergy[1]);
+
+        if (mCharging) {
+            views.setViewVisibility(R.id.charging, View.VISIBLE);
+        } else {
+            views.setViewVisibility(R.id.charging, View.GONE);
+        }
 
         ComponentName componentName = new ComponentName(context, BatteryWidget.class);
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);

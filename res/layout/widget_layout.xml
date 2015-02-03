@@ -6,6 +6,11 @@
     android:scaleType="fitCenter"
     android:adjustViewBounds="true">
 
+    <RelativeLayout
+        android:id="@+id/energy_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
     <ImageView
         android:id="@+id/tank_display"
         android:src="@drawable/full_tanks_0"
@@ -44,4 +49,18 @@
         android:layout_below="@+id/tank_display"
         android:layout_toLeftOf="@+id/energy_display_ones"
         android:layout_toStartOf="@+id/energy_display_ones" />
+
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/charging"
+        android:src="@drawable/charging"
+        android:visibility="visible"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_toRightOf="@id/energy_container"
+        android:layout_toEndOf="@id/energy_container"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        />
 </RelativeLayout>

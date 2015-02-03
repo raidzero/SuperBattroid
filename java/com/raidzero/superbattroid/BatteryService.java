@@ -17,6 +17,7 @@ public class BatteryService extends Service {
     private static final int NUM_TANKS = 15;
     public static boolean isRunning;
     private int currentEnergy;
+    private boolean currentlyCharging = false;
 
     private BroadcastReceiver mBatteryReceiver;
 
@@ -60,17 +61,31 @@ public class BatteryService extends Service {
         return START_NOT_STICKY;
     }
 
-
     private void registerReceivers() {
         mBatteryReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+
+                LogUtility.Log(tag, "onReceive: " + action);
                 if (isScreenOn()) {
                     int energyLevel = getEnergyLevel(context);
-                    if (energyLevel != currentEnergy) {
+                    boolean charging = false;
+
+                    if (action.equals(Intent.ACTION_POWER_CONNECTED)) {
+                        charging = true;
+                    } else if (action.equals(Intent.ACTION_POWER_DISCONNECTED)) {
+                        charging = false;
+                    } else {
+                        charging = isCharging(context);
+                    }
+
+                    if (energyLevel != currentEnergy || currentlyCharging != charging) {
                         mUpdateWidgetIntent.putExtra("batteryLevel", energyLevel);
+                        mUpdateWidgetIntent.putExtra("charging", charging);
                         sendBroadcast(mUpdateWidgetIntent);
                         currentEnergy = energyLevel;
+                        currentlyCharging = charging;
                     }
                 }
             }
@@ -78,6 +93,8 @@ public class BatteryService extends Service {
 
         IntentFilter batteryIntentFilter = new IntentFilter();
         batteryIntentFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
+        batteryIntentFilter.addAction(Intent.ACTION_POWER_CONNECTED);
+        batteryIntentFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
 
         registerReceiver(mBatteryReceiver, batteryIntentFilter);
     }
@@ -92,6 +109,14 @@ public class BatteryService extends Service {
 
         LogUtility.Log(tag, "getEnergyLevel: " + energyLevel);
         return energyLevel;
+    }
+
+    public static boolean isCharging(Context context) {
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = context.registerReceiver(null, ifilter);
+
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        return status == BatteryManager.BATTERY_STATUS_CHARGING;
     }
 
     private boolean isScreenOn() {
