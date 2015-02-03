@@ -1,5 +1,6 @@
 package com.raidzero.superbattroid;
 
+import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -9,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.TypedArray;
 import android.os.BatteryManager;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
@@ -19,9 +21,11 @@ import android.widget.RemoteViews;
 public class BatteryWidget extends AppWidgetProvider {
     private static final String tag = "BatteryWidget";
     private static final String ACTION_BATTERY_UPDATE = "com.raidzero.superbattroid.UPDATE";
-    private int energyLevel;
+    private static final String ACTION_BATTERY_REQUEST_UPDATE = "com.raidzero.superbattroid.REQUEST_UPDATE";
 
+    private int energyLevel =0 ;
     private boolean mCharging = false;
+
     private Intent battStatsIntent = new Intent(Intent.ACTION_POWER_USAGE_SUMMARY);
 
     @Override
@@ -29,6 +33,8 @@ public class BatteryWidget extends AppWidgetProvider {
         LogUtility.Log(tag, "onEnabled()");
 
         context.startService(new Intent(context, BatteryService.class));
+
+        enableAlarm(context, true);
         super.onEnabled(context);
     }
 
@@ -39,6 +45,8 @@ public class BatteryWidget extends AppWidgetProvider {
         if (BatteryService.isRunning) {
             context.stopService(new Intent(context, BatteryService.class));
         }
+
+        enableAlarm(context, false);
         super.onDisabled(context);
     }
 
@@ -49,7 +57,12 @@ public class BatteryWidget extends AppWidgetProvider {
         if (!BatteryService.isRunning) {
             context.startService(new Intent(context, BatteryService.class));
         }
+
+        // ask service for update right away
+        context.sendBroadcast(new Intent(ACTION_BATTERY_REQUEST_UPDATE));
+
         energyLevel = BatteryService.getEnergyLevel(context);
+        mCharging = BatteryService.isCharging(context);
 
         updateViews(context);
         super.onUpdate(context, appWidgetManager, appWidgetIds);
@@ -133,6 +146,20 @@ public class BatteryWidget extends AppWidgetProvider {
         ComponentName componentName = new ComponentName(context, BatteryWidget.class);
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
         appWidgetManager.updateAppWidget(componentName, views);
+    }
 
+    private void enableAlarm(Context context, boolean enabled) {
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(ACTION_BATTERY_REQUEST_UPDATE);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+
+        if (enabled) {
+            // every 2 minutes
+            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 1000, 120 * 1000, pendingIntent);
+            LogUtility.Log(tag, "Alarm set");
+        } else {
+            alarmManager.cancel(pendingIntent);
+            LogUtility.Log(tag, "Alarm canceled");
+        }
     }
 }

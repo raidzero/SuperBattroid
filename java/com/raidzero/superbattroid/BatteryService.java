@@ -16,13 +16,16 @@ public class BatteryService extends Service {
     private static final String tag = "BatteryService";
     private static final int NUM_TANKS = 15;
     public static boolean isRunning;
-    private int currentEnergy;
-    private boolean currentlyCharging = false;
+    private static int mCurrentEnergy;
+    private static boolean mCurrentlyCharging = false;
 
     private BroadcastReceiver mBatteryReceiver;
 
     private String mUpdateWidgetAction = "com.raidzero.superbattroid.UPDATE";
+    private static final String ACTION_BATTERY_REQUEST_UPDATE = "com.raidzero.superbattroid.REQUEST_UPDATE";
     private Intent mUpdateWidgetIntent;
+
+    private IntentFilter mBatteryIntentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -67,56 +70,57 @@ public class BatteryService extends Service {
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
 
-                LogUtility.Log(tag, "onReceive: " + action);
+                LogUtility.Log(tag, "BatteryService onReceive: " + action);
                 if (isScreenOn()) {
-                    int energyLevel = getEnergyLevel(context);
-                    boolean charging = false;
+                    boolean doBroadcast = false;
 
-                    if (action.equals(Intent.ACTION_POWER_CONNECTED)) {
-                        charging = true;
-                    } else if (action.equals(Intent.ACTION_POWER_DISCONNECTED)) {
-                        charging = false;
-                    } else {
-                        charging = isCharging(context);
+                    Intent batteryStatus = context.registerReceiver(null, mBatteryIntentFilter);
+                    int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+
+                    boolean charging = status == BatteryManager.BATTERY_STATUS_CHARGING;
+                    if (mCurrentlyCharging != charging) {
+                        mCurrentlyCharging = charging;
+                        doBroadcast = true;
                     }
 
-                    if (energyLevel != currentEnergy || currentlyCharging != charging) {
-                        mUpdateWidgetIntent.putExtra("batteryLevel", energyLevel);
-                        mUpdateWidgetIntent.putExtra("charging", charging);
+                    int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                    int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+                    int energy = (level * 100 / scale) * NUM_TANKS;
+
+                    LogUtility.Log(tag, "got info from battery: " + energy + ", " + level + ", " + scale);
+                    if (mCurrentEnergy != energy) {
+                        mCurrentEnergy = energy;
+                        doBroadcast = true;
+                    }
+
+                    if (doBroadcast) {
+                        LogUtility.Log(tag, "sending new battery info");
+                        mUpdateWidgetIntent.putExtra("charging", mCurrentlyCharging);
+                        mUpdateWidgetIntent.putExtra("batteryLevel", mCurrentEnergy);
+
                         sendBroadcast(mUpdateWidgetIntent);
-                        currentEnergy = energyLevel;
-                        currentlyCharging = charging;
                     }
                 }
             }
         };
 
+        // fire this when plugged/unplugged or an update is requested from alarm
         IntentFilter batteryIntentFilter = new IntentFilter();
-        batteryIntentFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
         batteryIntentFilter.addAction(Intent.ACTION_POWER_CONNECTED);
         batteryIntentFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+        batteryIntentFilter.addAction(ACTION_BATTERY_REQUEST_UPDATE);
 
         registerReceiver(mBatteryReceiver, batteryIntentFilter);
     }
 
 
     public static int getEnergyLevel(Context context) {
-        Intent batteryIntent = context.getApplicationContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-
-        int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
-        int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
-        int energyLevel = (level * 100 / scale) * NUM_TANKS;
-
-        LogUtility.Log(tag, "getEnergyLevel: " + energyLevel);
-        return energyLevel;
+        return mCurrentEnergy;
     }
 
     public static boolean isCharging(Context context) {
-        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = context.registerReceiver(null, ifilter);
-
-        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        return status == BatteryManager.BATTERY_STATUS_CHARGING;
+        return mCurrentlyCharging;
     }
 
     private boolean isScreenOn() {
