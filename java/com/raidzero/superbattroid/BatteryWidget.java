@@ -154,8 +154,8 @@ public class BatteryWidget extends AppWidgetProvider {
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
 
         if (enabled) {
-            // every 2 minutes
-            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 1000, 120 * 1000, pendingIntent);
+            // send request after 1 sec, then every 2 mins
+            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 1000, 1000 * 60 * 2, pendingIntent);
             LogUtility.Log(tag, "Alarm set");
         } else {
             alarmManager.cancel(pendingIntent);
