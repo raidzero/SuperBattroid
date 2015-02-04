@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_container"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:scaleType="fitCenter"
-    android:adjustViewBounds="true">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
 
     <RelativeLayout
         android:id="@+id/energy_container"
@@ -15,6 +13,8 @@
             android:id="@+id/tank_display"
             android:src="@drawable/full_tanks_0"
             android:layout_width="120dp"
+            android:maxWidth="120dp"
+            android:paddingBottom="-5dp"
             android:layout_height="wrap_content"
             />
 
@@ -22,6 +22,8 @@
             android:id="@+id/energy_label"
             android:src="@drawable/energy"
             android:layout_width="70dp"
+            android:maxWidth="70dp"
+            android:adjustViewBounds="true"
             android:scaleType="fitStart"
             android:layout_height="wrap_content"
             android:layout_below="@id/tank_display"
@@ -32,6 +34,8 @@
             android:src="@drawable/energy_0"
             android:adjustViewBounds="true"
             android:layout_width="15dp"
+            android:maxWidth="15dp"
+            android:scaleType="fitStart"
             android:layout_height="wrap_content"
             android:layout_below="@+id/tank_display"
             android:layout_alignRight="@+id/tank_display"
@@ -42,6 +46,8 @@
             android:src="@drawable/energy_0"
             android:adjustViewBounds="true"
             android:layout_width="15dp"
+            android:maxWidth="15dp"
+            android:scaleType="fitStart"
             android:layout_height="wrap_content"
             android:layout_below="@+id/tank_display"
             android:layout_toLeftOf="@+id/energy_display_ones"
@@ -55,7 +61,9 @@
         android:visibility="visible"
         android:paddingTop="6dp"
         android:layout_width="50dp"
+        android:maxWidth="50dp"
         android:layout_height="65dp"
+        android:maxHeight="65dp"
         android:layout_toRightOf="@id/energy_container"
         android:layout_toEndOf="@id/energy_container"
         android:scaleType="fitXY"

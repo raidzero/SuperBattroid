@@ -61,7 +61,7 @@ public class BatteryService extends Service {
 
         isRunning = true;
 
-        return START_NOT_STICKY;
+        return START_STICKY;
     }
 
     private void registerReceivers() {
