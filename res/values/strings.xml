@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Super Battroid</string>
+    <string name="widget_label_1x1">Super Battroid (small)</string>
+    <string name="widget_label_2x1">Super Battroid (medium)</string>
 </resources>

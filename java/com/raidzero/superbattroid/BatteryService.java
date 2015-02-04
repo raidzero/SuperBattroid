@@ -96,8 +96,8 @@ public class BatteryService extends Service {
 
                     if (doBroadcast) {
                         LogUtility.Log(tag, "sending new battery info");
-                        mUpdateWidgetIntent.putExtra("charging", mCurrentlyCharging);
-                        mUpdateWidgetIntent.putExtra("batteryLevel", mCurrentEnergy);
+                        mUpdateWidgetIntent.putExtra("charging", charging);
+                        mUpdateWidgetIntent.putExtra("batteryLevel", energy);
 
                         sendBroadcast(mUpdateWidgetIntent);
                     }
@@ -115,11 +115,11 @@ public class BatteryService extends Service {
     }
 
 
-    public static int getEnergyLevel(Context context) {
+    public static int getEnergyLevel() {
         return mCurrentEnergy;
     }
 
-    public static boolean isCharging(Context context) {
+    public static boolean isCharging() {
         return mCurrentlyCharging;
     }
 
