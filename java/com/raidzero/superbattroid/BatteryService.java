@@ -71,44 +71,44 @@ public class BatteryService extends Service {
                 String action = intent.getAction();
 
                 LogUtility.Log(tag, "BatteryService onReceive: " + action);
-                if (isScreenOn()) {
-                    boolean doBroadcast = false;
 
-                    Intent batteryStatus = context.registerReceiver(null, mBatteryIntentFilter);
-                    int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+                Intent batteryStatus = context.registerReceiver(null, mBatteryIntentFilter);
+                int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
 
-                    boolean charging = status == BatteryManager.BATTERY_STATUS_CHARGING;
-                    if (mCurrentlyCharging != charging) {
-                        mCurrentlyCharging = charging;
-                        doBroadcast = true;
-                    }
+                boolean doBroadcast = false;
+                boolean charging = status == BatteryManager.BATTERY_STATUS_CHARGING;
+                if (mCurrentlyCharging != charging) {
+                    mCurrentlyCharging = charging;
+                    doBroadcast = true;
+                }
 
-                    int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-                    int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+                int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
-                    int energy = (level * 100 / scale) * NUM_TANKS;
+                int energy = (level * 100 / scale) * NUM_TANKS;
 
-                    LogUtility.Log(tag, "got info from battery: " + energy + ", " + level + ", " + scale);
-                    if (mCurrentEnergy != energy) {
-                        mCurrentEnergy = energy;
-                        doBroadcast = true;
-                    }
+                LogUtility.Log(tag, "got info from battery: " + energy + ", " + level + ", " + scale);
+                if (mCurrentEnergy != energy) {
+                    mCurrentEnergy = energy;
+                    doBroadcast = true;
+                }
 
-                    if (doBroadcast) {
-                        LogUtility.Log(tag, "sending new battery info");
-                        mUpdateWidgetIntent.putExtra("charging", charging);
-                        mUpdateWidgetIntent.putExtra("batteryLevel", energy);
+                if (doBroadcast) {
+                    LogUtility.Log(tag, "sending new battery info");
+                    mUpdateWidgetIntent.putExtra("charging", charging);
+                    mUpdateWidgetIntent.putExtra("batteryLevel", energy);
 
-                        sendBroadcast(mUpdateWidgetIntent);
-                    }
+                    sendBroadcast(mUpdateWidgetIntent);
                 }
             }
+
         };
 
         // fire this when plugged/unplugged or an update is requested from alarm
         IntentFilter batteryIntentFilter = new IntentFilter();
         batteryIntentFilter.addAction(Intent.ACTION_POWER_CONNECTED);
         batteryIntentFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+        batteryIntentFilter.addAction(Intent.ACTION_SCREEN_ON);
         batteryIntentFilter.addAction(ACTION_BATTERY_REQUEST_UPDATE);
 
         registerReceiver(mBatteryReceiver, batteryIntentFilter);
@@ -121,10 +121,5 @@ public class BatteryService extends Service {
 
     public static boolean isCharging() {
         return mCurrentlyCharging;
-    }
-
-    private boolean isScreenOn() {
-        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        return pm.isScreenOn();
     }
 }
